@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Details - ESE-Rent</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <!-- Include header fragment -->
+    <div th:replace="fragments/header :: header"></div>
+    
+    <div class="container py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-white px-0">
+                <!-- Different breadcrumb links depending on user role -->
+                <li class="breadcrumb-item" sec:authorize="hasRole('CUSTOMER')">
+                    <a th:href="@{/customer/dashboard}">Customer Dashboard</a>
+                </li>
+                <li class="breadcrumb-item" sec:authorize="hasRole('LANDLORD')">
+                    <a th:href="@{/landlord/dashboard}">Landlord Dashboard</a>
+                </li>
+                <li class="breadcrumb-item" sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/admin/dashboard}">Admin Dashboard</a>
+                </li>
+                
+                <!-- Different bookings links depending on user role -->
+                <li class="breadcrumb-item" sec:authorize="hasRole('CUSTOMER')">
+                    <a th:href="@{/customer/bookings}">My Bookings</a>
+                </li>
+                <li class="breadcrumb-item" sec:authorize="hasRole('LANDLORD')">
+                    <a th:href="@{/landlord/bookings}">Bookings</a>
+                </li>
+                <li class="breadcrumb-item" sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/admin/bookings}">Bookings</a>
+                </li>
+                
+                <li class="breadcrumb-item active" aria-current="page" th:text="'Booking #' + ${booking.id}">Booking Details</li>
+            </ol>
+        </nav>
+        
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Booking Details</h3>
+                        <span class="badge" th:classappend="${
+                            booking.status.name() == 'PENDING' ? 'badge-warning' : 
+                            booking.status.name() == 'CONFIRMED' ? 'badge-success' : 
+                            booking.status.name() == 'CANCELLED' ? 'badge-danger' : 
+                            'badge-primary'
+                        }" th:text="${booking.status}">Status</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5>Booking Information</h5>
+                                <p><strong>Booking ID:</strong> <span th:text="${booking.id}">123</span></p>
+                                <p><strong>Check-in:</strong> <span th:text="${#temporals.format(booking.checkInDate, 'EEEE, MMMM d, yyyy')}">Monday, June 1, 2023</span></p>
+                                <p><strong>Check-out:</strong> <span th:text="${#temporals.format(booking.checkOutDate, 'EEEE, MMMM d, yyyy')}">Friday, June 5, 2023</span></p>
+                                <p><strong>Number of Nights:</strong> <span th:text="${booking.checkOutDate.toEpochDay() - booking.checkInDate.toEpochDay()}">4</span></p>
+                                <p><strong>Number of Guests:</strong> <span th:text="${booking.numberOfGuests}">2</span></p>
+                                <p><strong>Booking Date:</strong> <span th:text="${#temporals.format(booking.bookingDate, 'MMMM d, yyyy h:mm a')}">May 15, 2023 2:30 PM</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Payment Information</h5>
+                                <p><strong>Total Amount:</strong> <span th:text="${'$' + booking.totalPrice}">$200</span></p>
+                                
+                                <!-- Display payment details if available -->
+                                <div th:if="${payment != null}">
+                                    <p><strong>Payment Status:</strong> 
+                                        <span class="badge" th:classappend="${
+                                            payment.status.name() == 'PENDING' ? 'badge-warning' : 
+                                            payment.status.name() == 'COMPLETED' ? 'badge-success' : 
+                                            payment.status.name() == 'FAILED' ? 'badge-danger' : 
+                                            payment.status.name() == 'REFUNDED' ? 'badge-info' : 
+                                            'badge-secondary'
+                                        }" th:text="${payment.status}">Payment Status</span>
+                                    </p>
+                                    <p th:if="${payment.paymentMethod != null}"><strong>Payment Method:</strong> <span th:text="${payment.paymentMethod}">Credit Card</span></p>
+                                    <p th:if="${payment.transactionId != null}"><strong>Transaction ID:</strong> <span th:text="${payment.transactionId}">TXN123456</span></p>
+                                    <p th:if="${payment.paymentDate != null}"><strong>Payment Date:</strong> <span th:text="${#temporals.format(payment.paymentDate, 'MMMM d, yyyy h:mm a')}">May 15, 2023 2:35 PM</span></p>
+                                </div>
+                                
+                                <!-- Display payment link for pending payments -->
+                                <div th:if="${payment == null || payment.status.name() == 'PENDING'}" sec:authorize="hasRole('CUSTOMER')">
+                                    <div class="alert alert-warning mt-3">
+                                        <p class="mb-2">Payment is required to confirm this booking.</p>
+                                        <a th:href="@{'/customer/bookings/' + ${booking.id} + '/payment'}" class="btn btn-primary btn-sm">Make Payment</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Special Requests -->
+                        <div class="mb-4" th:if="${booking.specialRequests != null && !booking.specialRequests.isEmpty()}">
+                            <h5>Special Requests</h5>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <p class="mb-0" th:text="${booking.specialRequests}">Special requests text here...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Room Details -->
+                        <h5>Room Details</h5>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 th:text="${booking.room.title}">Deluxe Room</h5>
+                                        <p class="text-muted" th:text="${booking.room.address}">123 Main St, City</p>
+                                        <p><strong>Type:</strong> <span th:text="${booking.room.roomType.toString().replace('_', ' ')}">Entire Apartment</span></p>
+                                        <p><strong>Size:</strong> <span th:text="${booking.room.size + ' m²'}">30 m²</span></p>
+                                        <p><strong>Capacity:</strong> <span th:text="${booking.room.capacity + ' ' + (booking.room.capacity > 1 ? 'people' : 'person')}">2 people</span></p>
+                                        <a th:href="@{'/customer/rooms/' + ${booking.room.id}}" class="btn btn-outline-primary btn-sm" sec:authorize="hasRole('CUSTOMER')">View Room</a>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <!-- Room image or placeholder -->
+                                        <div style="height: 150px; background-color: #f2f2f2; display: flex; align-items: center; justify-content: center;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home text-secondary">
+                                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Customer Information (visible to landlords and admins) -->
+                        <div class="mb-4" sec:authorize="hasAnyRole('LANDLORD', 'ADMIN')">
+                            <h5>Customer Information</h5>
+                            <p><strong>Name:</strong> <span th:text="${booking.customer.fullName}">John Doe</span></p>
+                            <p><strong>Email:</strong> <span th:text="${booking.customer.email}">john@example.com</span></p>
+                            <p><strong>Phone:</strong> <span th:text="${booking.customer.phoneNumber}">+1234567890</span></p>
+                        </div>
+                        
+                        <!-- Landlord Information (visible to customers and admins) -->
+                        <div class="mb-4" sec:authorize="hasAnyRole('CUSTOMER', 'ADMIN')">
+                            <h5>Landlord Information</h5>
+                            <p><strong>Name:</strong> <span th:text="${booking.room.landlord.fullName}">Jane Smith</span></p>
+                            <p><strong>Email:</strong> <span th:text="${booking.room.landlord.email}">jane@example.com</span></p>
+                            <p><strong>Phone:</strong> <span th:text="${booking.room.landlord.phoneNumber}">+0987654321</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Action Panel for Customers -->
+                <div class="card mb-4" sec:authorize="hasRole('CUSTOMER')">
+                    <div class="card-header">
+                        <h5 class="mb-0">Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Payment Button -->
+                        <div th:if="${payment == null || payment.status.name() == 'PENDING'}" class="mb-3">
+                            <a th:href="@{'/customer/bookings/' + ${booking.id} + '/payment'}" class="btn btn-primary btn-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card mr-1">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                                Make Payment
+                            </a>
+                        </div>
+                        
+                        <!-- Cancel Booking Button (only for pending or confirmed bookings) -->
+                        <div th:if="${booking.status.name() == 'PENDING' || booking.status.name() == 'CONFIRMED'}">
+                            <form th:action="@{'/customer/bookings/' + ${booking.id} + '/cancel'}" method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                <button type="submit" class="btn btn-danger btn-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x-circle mr-1">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                                    </svg>
+                                    Cancel Booking
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Panel for Landlords -->
+                <div class="card mb-4" sec:authorize="hasRole('LANDLORD')">
+                    <div class="card-header">
+                        <h5 class="mb-0">Booking Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Update Booking Status Form -->
+                        <form th:action="@{'/landlord/bookings/' + ${booking.id} + '/status'}" method="post">
+                            <div class="form-group">
+                                <label for="status">Update Booking Status</label>
+                                <select class="form-control" id="status" name="status">
+                                    <option value="PENDING" th:selected="${booking.status.name() == 'PENDING'}">Pending</option>
+                                    <option value="CONFIRMED" th:selected="${booking.status.name() == 'CONFIRMED'}">Confirmed</option>
+                                    <option value="CANCELLED" th:selected="${booking.status.name() == 'CANCELLED'}">Cancelled</option>
+                                    <option value="COMPLETED" th:selected="${booking.status.name() == 'COMPLETED'}">Completed</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Update Status</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Action Panel for Admins -->
+                <div class="card mb-4" sec:authorize="hasRole('ADMIN')">
+                    <div class="card-header">
+                        <h5 class="mb-0">Admin Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Update Booking Status Form -->
+                        <form th:action="@{'/admin/bookings/' + ${booking.id} + '/status'}" method="post">
+                            <div class="form-group">
+                                <label for="adminStatus">Update Booking Status</label>
+                                <select class="form-control" id="adminStatus" name="status">
+                                    <option value="PENDING" th:selected="${booking.status.name() == 'PENDING'}">Pending</option>
+                                    <option value="CONFIRMED" th:selected="${booking.status.name() == 'CONFIRMED'}">Confirmed</option>
+                                    <option value="CANCELLED" th:selected="${booking.status.name() == 'CANCELLED'}">Cancelled</option>
+                                    <option value="COMPLETED" th:selected="${booking.status.name() == 'COMPLETED'}">Completed</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Update Status</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Timeline Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Booking Timeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-3">
+                                <div class="d-flex">
+                                    <div class="mr-3">
+                                        <div class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0 font-weight-bold">Booking Created</p>
+                                        <p class="text-muted small" th:text="${#temporals.format(booking.bookingDate, 'MMM d, yyyy h:mm a')}">May 15, 2023 2:30 PM</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Payment status (if payment exists) -->
+                            <li class="mb-3" th:if="${payment != null && payment.status.name() != 'PENDING'}">
+                                <div class="d-flex">
+                                    <div class="mr-3">
+                                        <div class="rounded-circle" style="width: 12px; height: 12px;"
+                                            th:classappend="${payment.status.name() == 'COMPLETED' ? 'bg-success' : 
+                                                            (payment.status.name() == 'FAILED' ? 'bg-danger' : 'bg-info')}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0 font-weight-bold" th:text="${
+                                            payment.status.name() == 'COMPLETED' ? 'Payment Completed' : 
+                                            (payment.status.name() == 'FAILED' ? 'Payment Failed' : 'Payment Refunded')
+                                        }">Payment Status</p>
+                                        <p class="text-muted small" th:text="${#temporals.format(payment.paymentDate, 'MMM d, yyyy h:mm a')}">May 15, 2023 2:35 PM</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Status change to confirmed (if confirmed) -->
+                            <li class="mb-3" th:if="${booking.status.name() == 'CONFIRMED'}">
+                                <div class="d-flex">
+                                    <div class="mr-3">
+                                        <div class="bg-success rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0 font-weight-bold">Booking Confirmed</p>
+                                        <p class="text-muted small">Status updated</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Status change to cancelled (if cancelled) -->
+                            <li class="mb-3" th:if="${booking.status.name() == 'CANCELLED'}">
+                                <div class="d-flex">
+                                    <div class="mr-3">
+                                        <div class="bg-danger rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0 font-weight-bold">Booking Cancelled</p>
+                                        <p class="text-muted small">Status updated</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Status change to completed (if completed) -->
+                            <li th:if="${booking.status.name() == 'COMPLETED'}">
+                                <div class="d-flex">
+                                    <div class="mr-3">
+                                        <div class="bg-primary rounded-circle" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0 font-weight-bold">Stay Completed</p>
+                                        <p class="text-muted small">Status updated</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include footer fragment -->
+    <div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

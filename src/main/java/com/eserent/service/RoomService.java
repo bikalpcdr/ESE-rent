@@ -2,10 +2,8 @@ package com.eserent.service;
 
 import com.eserent.entity.Booking;
 import com.eserent.entity.Room;
-import com.eserent.entity.RoomImage;
 import com.eserent.entity.User;
 import com.eserent.repository.BookingRepository;
-import com.eserent.repository.RoomImageRepository;
 import com.eserent.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +25,6 @@ public class RoomService {
     private final RoomRepository roomRepository;
 
     private final BookingRepository bookingRepository;
-
-    private final RoomImageRepository roomImageRepository;
 
     public List<Room> getAllRooms() {
         return roomRepository.findAll();
@@ -84,34 +80,5 @@ public class RoomService {
     public BigDecimal calculateTotalPrice(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
         long nights = checkOutDate.toEpochDay() - checkInDate.toEpochDay();
         return room.getPricePerNight().multiply(BigDecimal.valueOf(nights));
-    }
-
-    public Optional<RoomImage> getImageById(Long id) {
-        return roomImageRepository.findById(id);
-    }
-
-    public RoomImage saveImage(RoomImage image) {
-        return roomImageRepository.save(image);
-    }
-
-    public void deleteImage(Long id) {
-        roomImageRepository.deleteById(id);
-    }
-
-    // Add this method to RoomService
-    public void deleteRoomImage(Long roomId, Long imageId) {
-        Optional<Room> roomOpt = getRoomById(roomId);
-        if (roomOpt.isPresent()) {
-            Room room = roomOpt.get();
-
-            // Find and remove the image from the room's collection
-            room.getImages().removeIf(image -> image.getId().equals(imageId));
-
-            // Update the room to persist the changes
-            updateRoom(room);
-
-            // Delete the image from the repository
-            roomImageRepository.deleteById(imageId);
-        }
     }
 }

@@ -1,8 +1,0 @@
-modules = ["java-17", "java-11", "nodejs-20"]
-
-[nix]
-channel = "stable-24_05"
-
-[[ports]]
-localPort = 8080
-externalPort = 80

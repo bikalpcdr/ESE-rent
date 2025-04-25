@@ -74,6 +74,24 @@ public class UserService implements UserDetailsService {
         userRepository.deleteById(id);
     }
 
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
+
+    public long countAllUsers() {
+        return userRepository.count();
+    }
+
+    public long countUsersByRole(User.Role role) {
+        return userRepository.countByRole(role);
+    }
+
+    public void createUser(User user) {
+        // Encode password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+    }
+
     public boolean verifyPassword(User user, String rawPassword) {
         return passwordEncoder.matches(rawPassword, user.getPassword());
     }

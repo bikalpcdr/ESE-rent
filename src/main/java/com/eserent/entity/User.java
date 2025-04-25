@@ -64,7 +64,7 @@ public class User implements UserDetails {
     private List<Booking> bookings = new ArrayList<>();
 
     public enum Role {
-        ROLE_ADMIN, ROLE_LANDLORD, ROLE_CUSTOMER
+        ROLE_SUPER_ADMIN, ROLE_LANDLORD, ROLE_CUSTOMER
     }
 
     @Override

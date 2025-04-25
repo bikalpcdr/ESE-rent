@@ -1,162 +1,235 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.springframework.org/security/tags">
 <head>
+    <title>Welcome to ESE-Rent</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESE-Rent - Find Your Perfect Room</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+            
+        main {
+            flex: 1;
+        }
+        
+        .hero {
+            background-color: #f8f9fa;
+            padding: 80px 0;
+            margin-bottom: 2rem;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-image {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .hero-image:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card.hover-effect {
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+        
+        .card.hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+            border-color: #ddd;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 6px 10px;
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: #0d6efd;
+        }
+        
+        .section-title.text-center:after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
 </head>
 <body>
-    <!-- Include header fragment -->
+    <!-- Include the header fragment -->
     <div th:replace="fragments/header :: header"></div>
-    
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h1>Find Your Perfect Room</h1>
-            <p>Browse thousands of rooms for rent from verified landlords. Your next home is just a few clicks away.</p>
-            <a href="/rooms" class="btn btn-primary btn-lg">Browse Rooms</a>
-            <a href="/register" class="btn btn-outline-light btn-lg ml-2" sec:authorize="!isAuthenticated()">Join Now</a>
-        </div>
-    </section>
-    
-    <!-- Featured Rooms Section -->
-    <section class="container my-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Featured Rooms</h2>
-            <a href="/rooms" class="btn btn-outline-primary">View All</a>
-        </div>
-        
-        <div class="row">
-            <!-- Display featured rooms -->
-            <div class="col-md-4 mb-4" th:each="room : ${featuredRooms}">
-                <div class="card h-100">
-                    <!-- Room image -->
-                    <div class="card-img-top" style="height: 200px; background-color: #f2f2f2; display: flex; align-items: center; justify-content: center;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home text-secondary">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h1 class="display-4 fw-bold mb-3">Find Your Perfect Room</h1>
+                        <p class="lead mb-4">ESE-Rent connects tenants with landlords to find the perfect accommodation for your needs. Browse our selection of rooms, apartments, and houses available for rent.</p>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                            <a href="/rooms" class="btn btn-primary btn-lg px-4 me-md-2">Find Rooms</a>
+                            <a sec:authorize="!isAuthenticated()" href="/register" class="btn btn-outline-secondary btn-lg px-4">Join Now</a>
+                            <a sec:authorize="isAuthenticated()" href="/dashboard" class="btn btn-outline-secondary btn-lg px-4">My Dashboard</a>
+                        </div>
                     </div>
-                    
-                    <div class="card-body">
-                        <h5 class="card-title" th:text="${room.title}">Room Title</h5>
-                        <p class="card-text text-primary font-weight-bold" th:text="${'$' + room.pricePerNight + ' / night'}">$50 / night</p>
-                        <p class="card-text" th:text="${room.address}">123 Main St, City</p>
-                        <p class="card-text">
-                            <span class="text-muted" th:text="${room.size + ' m²'}">30 m²</span> • 
-                            <span class="text-muted" th:text="${room.capacity + ' ' + (room.capacity > 1 ? 'people' : 'person')}">2 people</span>
+                    <div class="col-lg-6">
+                        <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1350&q=80" class="img-fluid rounded hero-image" alt="Room interior">
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features Section -->
+        <section class="py-5">
+            <div class="container">
+                <h2 class="text-center section-title mx-auto" style="width: fit-content;">Why Choose ESE-Rent?</h2>
+                <div class="row g-4 mt-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 h-100 p-4 text-center">
+                            <div class="feature-icon mx-auto">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <h3 class="fs-4 mb-3">Wide Selection</h3>
+                            <p class="text-muted mb-0">Browse through thousands of verified rooms and find the perfect match for your needs and budget.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 h-100 p-4 text-center">
+                            <div class="feature-icon mx-auto">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <h3 class="fs-4 mb-3">Trusted Platform</h3>
+                            <p class="text-muted mb-0">Our verification process ensures that all listings are genuine and meet quality standards.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 h-100 p-4 text-center">
+                            <div class="feature-icon mx-auto">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                            <h3 class="fs-4 mb-3">No Hidden Fees</h3>
+                            <p class="text-muted mb-0">Transparent pricing with no hidden fees or commission charges for tenants.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Featured Rooms Section -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-0">Featured Rooms</h2>
+                        <p class="text-muted mb-0" th:if="${featuredRooms != null}">
+                            <span th:text="${#lists.size(featuredRooms)}">0</span> rooms available
                         </p>
                     </div>
+                    <a href="/rooms" class="btn btn-outline-primary">
+                        View All Rooms
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                
+                <div class="row g-4">
+                    <div class="col-md-4 mb-4" th:each="room : ${featuredRooms}">
+                        <div class="card h-100 shadow-sm hover-effect">
+                            <div class="position-relative">
+                                <div th:if="${!#lists.isEmpty(room.imageUrls)}" class="bg-image">
+                                    <img th:src="${room.imageUrls[0]}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Room Image">
+                                </div>
+                                <div th:if="${#lists.isEmpty(room.imageUrls)}" class="card-img-top bg-light d-flex justify-content-center align-items-center" style="height: 200px;">
+                                    <i class="bi bi-house-door text-secondary" style="font-size: 4rem;"></i>
+                                </div>
+                                <span th:if="${room.available}" class="position-absolute top-0 end-0 badge bg-success m-2">Available</span>
+                                <span th:unless="${room.available}" class="position-absolute top-0 end-0 badge bg-danger m-2">Unavailable</span>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0" th:text="${room.title}">Luxury Apartment</h5>
+                                    <span class="badge bg-primary" th:text="${#strings.replace(room.roomType.name(), '_', ' ')}">APARTMENT</span>
+                                </div>
+                                <p class="card-text text-primary fw-bold" th:text="${'$' + room.pricePerNight + ' / night'}">$100 / night</p>
+                                <p class="card-text mb-3 text-truncate">
+                                    <i class="bi bi-geo-alt-fill text-secondary me-1"></i>
+                                    <span th:text="${room.address}">123 Main St, City</span>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-people me-1"></i>
+                                        <span th:text="${room.capacity + ' ' + (room.capacity > 1 ? 'people' : 'person')}">4 people</span>
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="bi bi-rulers me-1"></i>
+                                        <span th:text="${room.size + ' m²'}">50 m²</span>
+                                    </small>
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    <!-- If user is authenticated, show View Details button -->
+                                    <a sec:authorize="isAuthenticated()" th:href="@{'/rooms/' + ${room.id}}" class="btn btn-outline-primary w-100">View Details</a>
+                                    
+                                    <!-- If user is not authenticated, show Login button -->
+                                    <div sec:authorize="!isAuthenticated()" class="d-grid gap-2">
+                                        <a href="/login" class="btn btn-outline-primary">Login to View</a>
+                                        <small class="text-center text-muted">You must be logged in to view room details</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
-                        <span class="badge badge-pill" 
-                              th:classappend="${room.roomType.toString().equals('ENTIRE_APARTMENT') ? 'badge-primary' : 
-                                              (room.roomType.toString().equals('PRIVATE_ROOM') ? 'badge-success' : 
-                                              (room.roomType.toString().equals('SHARED_ROOM') ? 'badge-warning' : 'badge-info'))}"
-                              th:text="${room.roomType.toString().replace('_', ' ')}">
-                            Room Type
-                        </span>
-                        <a th:href="@{'/landlord/rooms/' + ${room.id}}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    <!-- Show message if no featured rooms are available -->
+                    <div class="col-12" th:if="${#lists.isEmpty(featuredRooms)}">
+                        <div class="alert alert-info">
+                            <p class="text-center mb-0">No featured rooms available at the moment. Check back soon!</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Show message if no rooms are available -->
-            <div class="col-12 text-center" th:if="${#lists.isEmpty(featuredRooms)}">
-                <div class="alert alert-info">
-                    <p>No rooms available at the moment. Please check back later.</p>
+        </section>
+        
+        <!-- Call to Action -->
+        <section class="py-5 text-white" style="background: linear-gradient(to right, #0d6efd, #0099ff);">
+            <div class="container py-4 text-center">
+                <h2 class="mb-3 fw-bold">Ready to find your next home?</h2>
+                <p class="lead mb-4 mx-auto" style="max-width: 700px;">Join thousands of satisfied customers who found their perfect accommodation with ESE-Rent.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a sec:authorize="!isAuthenticated()" href="/register" class="btn btn-light btn-lg px-4">Sign Up Now</a>
+                    <a href="/rooms" class="btn btn-outline-light btn-lg px-4">Browse Rooms</a>
                 </div>
             </div>
-        </div>
-    </section>
-    
-    <!-- How It Works Section -->
-    <section class="bg-light py-5">
-        <div class="container">
-            <h2 class="text-center mb-5">How ESE-Rent Works</h2>
-            
-            <div class="row">
-                <div class="col-md-4 text-center mb-4">
-                    <div class="mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </div>
-                    <h4>Find</h4>
-                    <p>Browse and search through verified listings to find your ideal room.</p>
-                </div>
-                
-                <div class="col-md-4 text-center mb-4">
-                    <div class="mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                    </div>
-                    <h4>Book</h4>
-                    <p>Secure your room by making a booking with our easy payment process.</p>
-                </div>
-                
-                <div class="col-md-4 text-center mb-4">
-                    <div class="mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
-                    </div>
-                    <h4>Stay</h4>
-                    <p>Move in and enjoy your new space with peace of mind.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Landlord Section -->
-    <section class="container my-5" sec:authorize="!hasRole('LANDLORD')">
-        <div class="row align-items-center">
-            <div class="col-md-6 mb-4 mb-md-0">
-                <h2>Are You a Landlord?</h2>
-                <p class="lead">List your rooms on ESE-Rent and reach thousands of potential tenants.</p>
-                <ul class="list-unstyled mb-4">
-                    <li class="mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check text-success mr-2">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        Create free listings for your rooms
-                    </li>
-                    <li class="mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check text-success mr-2">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        Manage bookings with our user-friendly dashboard
-                    </li>
-                    <li class="mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check text-success mr-2">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        Secure payments handled by our platform
-                    </li>
-                </ul>
-                <a href="/register" class="btn btn-primary" sec:authorize="!isAuthenticated()">Register as a Landlord</a>
-                <a href="/landlord/dashboard" class="btn btn-primary" sec:authorize="isAuthenticated() && !hasRole('LANDLORD')">Switch to Landlord Mode</a>
-            </div>
-            <div class="col-md-6">
-                <div style="height: 350px; background-color: #f2f2f2; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-key text-secondary">
-                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Include footer fragment -->
+        </section>
+    </main>
+
+    <!-- Include the footer fragment -->
     <div th:replace="fragments/footer :: footer"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

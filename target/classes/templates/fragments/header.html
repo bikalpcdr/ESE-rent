@@ -1,75 +1,61 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.springframework.org/security/tags">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESE-Rent</title>
 </head>
 <body>
-    <!-- Header fragment to be included in all pages -->
+    <!-- Header Fragment -->
     <header th:fragment="header">
-        <nav class="navbar navbar-expand-lg navbar-light bg-white">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="/">ESE-Rent</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                <a class="navbar-brand fw-bold" href="/">ESE-Rent</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mr-auto">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Home</a>
+                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/' || #httpServletRequest.requestURI == '/home' ? 'active' : ''}" href="/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="landlord/rooms">Rooms</a>
+                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI.startsWith('/rooms') ? 'active' : ''}" href="/rooms">Rooms</a>
                         </li>
-                        <!-- Show dashboard link for authenticated users -->
-                        <li class="nav-item" sec:authorize="isAuthenticated()">
-                            <a class="nav-link" href="/dashboard">Dashboard</a>
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/about' ? 'active' : ''}" href="/about">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/contact' ? 'active' : ''}" href="/contact">Contact</a>
                         </li>
                     </ul>
                     
-                    <!-- User menu -->
-                    <ul class="navbar-nav">
-                        <!-- For non-authenticated users -->
-                        <li class="nav-item" sec:authorize="!isAuthenticated()">
-                            <a class="nav-link" href="/login">Login</a>
-                        </li>
-                        <li class="nav-item" sec:authorize="!isAuthenticated()">
-                            <a class="nav-link" href="/register">Register</a>
-                        </li>
-                        
-                        <!-- For authenticated users -->
-                        <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span sec:authentication="name">Username</span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-                                <!-- Admin Dashboard -->
-                                <a class="dropdown-item" sec:authorize="hasRole('ADMIN')" href="/admin/dashboard">
-                                    Admin Dashboard
-                                </a>
-                                
-                                <!-- Landlord Dashboard -->
-                                <a class="dropdown-item" sec:authorize="hasRole('LANDLORD')" href="/landlord/dashboard">
-                                    Landlord Dashboard
-                                </a>
-                                
-                                <!-- Customer Dashboard -->
-                                <a class="dropdown-item" sec:authorize="hasRole('CUSTOMER')" href="/customer/dashboard">
-                                    My Dashboard
-                                </a>
-                                
-                                <!-- Common menu items -->
-                                <a class="dropdown-item" href="/profile">My Profile</a>
-                                <div class="dropdown-divider"></div>
-                                <form th:action="@{/logout}" method="post" class="dropdown-item p-0">
-                                    <button type="submit" class="btn btn-link text-danger p-2">Logout</button>
-                                </form>
-                            </div>
-                        </li>
-                    </ul>
+                    <!-- Show login/register buttons for non-authenticated users -->
+                    <div class="d-flex" sec:authorize="!isAuthenticated()">
+                        <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                        <a href="/register" class="btn btn-primary">Register</a>
+                    </div>
+                    
+                    <!-- Show user menu for authenticated users -->
+                    <div class="dropdown" sec:authorize="isAuthenticated()">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span sec:authentication="name">Username</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li sec:authorize="hasRole('ROLE_LANDLORD')">
+                                <a class="dropdown-item" href="/landlord/dashboard">Landlord Dashboard</a>
+                            </li>
+                            <li sec:authorize="hasRole('ROLE_CUSTOMER')">
+                                <a class="dropdown-item" href="/customer/dashboard">Customer Dashboard</a>
+                            </li>
+                            <li sec:authorize="hasRole('ROLE_SUPER_ADMIN')">
+                                <a class="dropdown-item" href="/super-admin/dashboard">Admin Dashboard</a>
+                            </li>
+                            <li><a class="dropdown-item" href="/profile">My Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -78,21 +64,15 @@
         <div class="container mt-3">
             <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
                 <span th:text="${successMessage}"></span>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
                 <span th:text="${errorMessage}"></span>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <div th:if="${infoMessage}" class="alert alert-info alert-dismissible fade show" role="alert">
                 <span th:text="${infoMessage}"></span>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
     </header>

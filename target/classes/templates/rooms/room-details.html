@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.springframework.org/security/tags">
+<head>
+    <title>Room Details - ESE-Rent</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .room-image {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .price-badge {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .room-gallery {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .room-gallery img {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .room-gallery img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .amenity-badge {
+            background-color: #f8f9fa;
+            color: #212529;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        .booking-section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">ESE-Rent</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/rooms">Rooms</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Show login/register buttons for non-authenticated users -->
+                <div class="d-flex" sec:authorize="!isAuthenticated()">
+                    <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                    <a href="/register" class="btn btn-primary">Register</a>
+                </div>
+                <!-- Show user menu for authenticated users -->
+                <div class="dropdown" sec:authorize="isAuthenticated()">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span sec:authentication="name">Username</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <!-- Room Details -->
+            <div class="col-lg-8">
+                <!-- Room Images -->
+                <div th:if="${!#lists.isEmpty(room.imageUrls)}" class="mb-4">
+                    <img th:src="${room.imageUrls[0]}" alt="Room Image" class="room-image mb-2" id="mainImage">
+                    <div class="room-gallery" th:if="${#lists.size(room.imageUrls) > 1}">
+                        <img th:each="img, imgStat : ${room.imageUrls}" 
+                                th:src="${img}" 
+                                th:alt="'Room Image ' + ${imgStat.count}"
+                                onclick="document.getElementById('mainImage').src=this.src">
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(room.imageUrls)}" class="text-center bg-light p-5 mb-4 rounded">
+                    <i class="bi bi-house-door" style="font-size: 5rem; color: #adb5bd;"></i>
+                    <p class="mt-3 text-muted">No images available</p>
+                </div>
+
+                <!-- Room Title and Type -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="mb-0" th:text="${room.title}">Room Title</h1>
+                    <span class="badge bg-primary" th:text="${#strings.replace(room.roomType.name(), '_', ' ')}">ROOM TYPE</span>
+                </div>
+
+                <!-- Room Address -->
+                <p class="mb-4">
+                    <i class="bi bi-geo-alt me-1"></i>
+                    <span th:text="${room.address}">123 Main St, City, Country</span>
+                </p>
+
+                <!-- Room Description -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Description</h5>
+                    </div>
+                    <div class="card-body">
+                        <p th:text="${room.description}">Detailed room description here...</p>
+                    </div>
+                </div>
+
+                <!-- Room Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-rulers me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h6 class="mb-0">Size</h6>
+                                        <p class="mb-0" th:text="${room.size + ' m²'}">50 m²</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-people me-2" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <h6 class="mb-0">Capacity</h6>
+                                        <p class="mb-0" th:text="${room.capacity + ' ' + (room.capacity > 1 ? 'people' : 'person')}">4 people</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amenities -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Amenities</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${room.amenities != null && !room.amenities.isEmpty()}">
+                            <span class="badge amenity-badge p-2 mb-2" th:each="amenity : ${#strings.arraySplit(room.amenities, ',')}"
+                                  th:text="${amenity.trim()}">Amenity</span>
+                        </div>
+                        <p class="text-muted" th:if="${room.amenities == null || room.amenities.isEmpty()}">No amenities listed</p>
+                    </div>
+                </div>
+
+                <!-- Host Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">About the Host</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-light text-center me-3" style="width: 60px; height: 60px; line-height: 60px;">
+                                <i class="bi bi-person" style="font-size: 2rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1" th:text="${room.landlord.fullName}">Host Name</h5>
+                                <p class="text-muted mb-0">Joined <span th:text="${#temporals.format(room.landlord.createdAt, 'MMM yyyy')}">Jan 2023</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Section -->
+            <div class="col-lg-4">
+                <div class="booking-section sticky-top" style="top: 20px;">
+                    <div class="mb-4 text-center">
+                        <span class="badge bg-primary price-badge" th:text="${'$' + room.pricePerNight + ' / night'}">$100 / night</span>
+                    </div>
+
+                    <sec:authorize access="hasRole('CUSTOMER')">
+                        <form th:action="@{'/customer/rooms/' + ${room.id} + '/book'}" method="post">
+                            <div class="mb-3">
+                                <label for="checkInDate" class="form-label">Check-in Date</label>
+                                <input type="date" class="form-control" id="checkInDate" name="checkInDate" required 
+                                       th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="checkOutDate" class="form-label">Check-out Date</label>
+                                <input type="date" class="form-control" id="checkOutDate" name="checkOutDate" required 
+                                       th:min="${#temporals.format(#temporals.createToday().plusDays(1), 'yyyy-MM-dd')}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="numberOfGuests" class="form-label">Number of Guests</label>
+                                <select class="form-select" id="numberOfGuests" name="numberOfGuests" required>
+                                    <option th:each="i : ${#numbers.sequence(1, room.capacity)}" th:value="${i}" 
+                                            th:text="${i + ' ' + (i > 1 ? 'guests' : 'guest')}">1 guest</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="specialRequests" class="form-label">Special Requests</label>
+                                <textarea class="form-control" id="specialRequests" name="specialRequests" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Book Now</button>
+                        </form>
+                    </sec:authorize>
+
+                    <sec:authorize access="!hasRole('CUSTOMER')">
+                        <div class="alert alert-info">
+                            <p class="mb-0 text-center">You need a customer account to book this room.</p>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                            </div>
+                        </div>
+                    </sec:authorize>
+
+                    <div th:if="${!room.available}" class="alert alert-warning mt-3">
+                        <p class="mb-0 text-center">This room is currently unavailable for booking.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark text-white mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>ESE-Rent</h5>
+                    <p class="text-muted">Finding perfect accommodation made easy.</p>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h5>Company</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">About</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Careers</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">News</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h5>Support</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Help Center</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Contact Us</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Subscribe to our newsletter</h5>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Email address">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <p class="text-muted">© 2025 ESE-Rent. All rights reserved.</p>
+                <ul class="list-unstyled d-flex">
+                    <li class="ms-3"><a href="#" class="text-muted"><i class="bi bi-facebook"></i></a></li>
+                    <li class="ms-3"><a href="#" class="text-muted"><i class="bi bi-twitter"></i></a></li>
+                    <li class="ms-3"><a href="#" class="text-muted"><i class="bi bi-instagram"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add a simple script to validate checkout date is after checkin date
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkInDate = document.getElementById('checkInDate');
+            const checkOutDate = document.getElementById('checkOutDate');
+            
+            if (checkInDate && checkOutDate) {
+                checkInDate.addEventListener('change', function() {
+                    const minCheckOutDate = new Date(checkInDate.value);
+                    minCheckOutDate.setDate(minCheckOutDate.getDate() + 1);
+                    
+                    const minDateString = minCheckOutDate.toISOString().split('T')[0];
+                    checkOutDate.min = minDateString;
+                    
+                    // If current checkout date is before new min date, reset it
+                    if (checkOutDate.value && new Date(checkOutDate.value) < minCheckOutDate) {
+                        checkOutDate.value = minDateString;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

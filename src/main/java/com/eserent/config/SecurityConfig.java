@@ -27,11 +27,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/home", "/register", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()  // Public access to common resources
-                .antMatchers("/rooms/**").permitAll()  // Allow access to /rooms/** (so roomDetails is accessible)
-                .antMatchers("/admin/**").hasRole("ADMIN")  // Restrict /admin/** to ADMIN role
+                .antMatchers("/", "/home", "/register", "/css/**", "/js/**", "/images/**", "/h2-console/**", "/uploads/**").permitAll()  // Public access to common resources
+                .antMatchers("/rooms").permitAll()  // Allow public access to rooms listing
+                .antMatchers("/rooms/*").authenticated()  // Restrict room details to authenticated users
+                .antMatchers("/super-admin/**", "/admin/**").hasRole("SUPER_ADMIN")  // Restrict both /super-admin/** and /admin/** to SUPER_ADMIN role
                 .antMatchers("/landlord/**").hasRole("LANDLORD")  // Restrict /landlord/** to LANDLORD role
                 .antMatchers("/customer/**").hasRole("CUSTOMER")  // Restrict /customer/** to CUSTOMER role
+                .antMatchers("/access-denied", "/403").permitAll()  // Make error pages publicly accessible
                 .anyRequest().authenticated()  // Any other request should be authenticated
                 .and()
                 .formLogin()
@@ -41,12 +43,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout")
+                .logoutSuccessUrl("/")
                 .permitAll()
                 .and()
                 .exceptionHandling()
-                .accessDeniedPage("/403");  // Custom 403 error page
-
+                .accessDeniedPage("/access-denied");  // Use /access-denied for consistency
     }
 
     @Override

@@ -65,14 +65,6 @@ public class Room {
     @Enumerated(EnumType.STRING)
     private RoomType roomType;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RoomImage> images = new ArrayList<>();
-
-    public void addImage(RoomImage image) {
-        image.setRoom(this);
-        images.add(image);
-    }
-
     public enum RoomType {
         APARTMENT, PRIVATE_ROOM, SHARED_ROOM, HOUSE, HOTEL, STUDIO
     }

@@ -6,17 +6,24 @@ import com.eserent.entity.User;
 import com.eserent.service.BookingService;
 import com.eserent.service.RoomService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Controller for landlord dashboard and operations.
@@ -91,6 +98,7 @@ public class LandlordController {
     @PostMapping("/rooms/add")
     public String addRoom(@Valid @ModelAttribute("room") Room room,
                          BindingResult bindingResult,
+                         @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
                          Authentication authentication,
                          RedirectAttributes redirectAttributes) {
 
@@ -98,12 +106,29 @@ public class LandlordController {
             return "landlord/room-form";
         }
 
-        User landlord = (User) authentication.getPrincipal();
-        room.setLandlord(landlord);
+        try {
+            User landlord = (User) authentication.getPrincipal();
+            room.setLandlord(landlord);
 
-        roomService.createRoom(room);
-        redirectAttributes.addFlashAttribute("successMessage", "Room added successfully!");
-        return "redirect:/landlord/rooms";
+            // Handle image uploads
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                List<String> imageUrls = new ArrayList<>();
+                for (MultipartFile file : imageFiles) {
+                    if (!file.isEmpty()) {
+                        String imageUrl = uploadImage(file);
+                        imageUrls.add(imageUrl);
+                    }
+                }
+                room.setImageUrls(imageUrls);
+            }
+
+            roomService.createRoom(room);
+            redirectAttributes.addFlashAttribute("successMessage", "Room added successfully!");
+            return "redirect:/landlord/rooms";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error adding room: " + e.getMessage());
+            return "landlord/room-form";
+        }
     }
 
     @GetMapping("/rooms/edit/{id}")
@@ -136,6 +161,8 @@ public class LandlordController {
     public String updateRoom(@PathVariable Long id,
                             @Valid @ModelAttribute("room") Room room,
                             BindingResult bindingResult,
+                            @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
+                            @RequestParam(value = "deleteImageUrls", required = false) List<String> deleteImageUrls,
                             Authentication authentication,
                             RedirectAttributes redirectAttributes) {
 
@@ -143,35 +170,82 @@ public class LandlordController {
             return "landlord/room-form";
         }
 
-        Optional<Room> existingRoomOpt = roomService.getRoomById(id);
-        if (existingRoomOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Room not found");
+        try {
+            Optional<Room> existingRoomOpt = roomService.getRoomById(id);
+            if (existingRoomOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Room not found");
+                return "redirect:/landlord/rooms";
+            }
+
+            Room existingRoom = existingRoomOpt.get();
+            User landlord = (User) authentication.getPrincipal();
+
+            // Check if the landlord owns this room
+            if (!existingRoom.getLandlord().getId().equals(landlord.getId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You don't have permission to edit this room");
+                return "redirect:/landlord/rooms";
+            }
+
+            // Update room properties while preserving the landlord and bookings
+            existingRoom.setTitle(room.getTitle());
+            existingRoom.setDescription(room.getDescription());
+            existingRoom.setPricePerNight(room.getPricePerNight());
+            existingRoom.setAddress(room.getAddress());
+            existingRoom.setSize(room.getSize());
+            existingRoom.setCapacity(room.getCapacity());
+            existingRoom.setAvailable(room.isAvailable());
+            existingRoom.setAmenities(room.getAmenities());
+            existingRoom.setRoomType(room.getRoomType());
+
+            // Handle image deletions
+            if (deleteImageUrls != null && !deleteImageUrls.isEmpty()) {
+                List<String> currentImages = new ArrayList<>(existingRoom.getImageUrls());
+                currentImages.removeAll(deleteImageUrls);
+                existingRoom.setImageUrls(currentImages);
+            }
+
+            // Handle image uploads
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                List<String> imageUrls = new ArrayList<>(existingRoom.getImageUrls()); // Keep existing images
+                for (MultipartFile file : imageFiles) {
+                    if (!file.isEmpty()) {
+                        String imageUrl = uploadImage(file);
+                        imageUrls.add(imageUrl);
+                    }
+                }
+                existingRoom.setImageUrls(imageUrls);
+            }
+
+            roomService.updateRoom(existingRoom);
+            redirectAttributes.addFlashAttribute("successMessage", "Room updated successfully!");
             return "redirect:/landlord/rooms";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating room: " + e.getMessage());
+            return "landlord/room-form";
         }
+    }
 
-        Room existingRoom = existingRoomOpt.get();
-        User landlord = (User) authentication.getPrincipal();
-
-        // Check if the landlord owns this room
-        if (!existingRoom.getLandlord().getId().equals(landlord.getId())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "You don't have permission to edit this room");
-            return "redirect:/landlord/rooms";
+    // Helper method to upload images
+    private String uploadImage(MultipartFile file) throws IOException {
+        // Get the file extension
+        String originalFilename = file.getOriginalFilename();
+        String extension = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+        
+        // Generate a unique filename
+        String filename = UUID.randomUUID() + extension;
+        
+        // Create the uploads directory if it doesn't exist
+        Path uploadDir = Paths.get("uploads");
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
         }
-
-        // Update room properties while preserving the landlord and bookings
-        existingRoom.setTitle(room.getTitle());
-        existingRoom.setDescription(room.getDescription());
-        existingRoom.setPricePerNight(room.getPricePerNight());
-        existingRoom.setAddress(room.getAddress());
-        existingRoom.setSize(room.getSize());
-        existingRoom.setCapacity(room.getCapacity());
-        existingRoom.setAvailable(room.isAvailable());
-        existingRoom.setAmenities(room.getAmenities());
-        existingRoom.setRoomType(room.getRoomType());
-
-        roomService.updateRoom(existingRoom);
-        redirectAttributes.addFlashAttribute("successMessage", "Room updated successfully!");
-        return "redirect:/landlord/rooms";
+        
+        // Save the file
+        Path filePath = uploadDir.resolve(filename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        
+        // Return the URL path to the file
+        return "/uploads/" + filename;
     }
 
     @PostMapping("/rooms/delete/{id}")

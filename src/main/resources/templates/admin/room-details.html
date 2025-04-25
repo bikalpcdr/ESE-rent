@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Room Details - ESE-Rent</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+        }
+        .wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            align-items: stretch;
+        }
+        .sidebar {
+            min-width: 250px;
+            max-width: 250px;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            padding: 0;
+            transition: all 0.3s;
+            background-color: #3b71ca;
+        }
+        .sidebar-content {
+            padding: 20px;
+            width: 100%;
+            height: 100%;
+        }
+        .content {
+            width: 100%;
+            padding: 20px;
+            min-height: 100vh;
+            margin-left: 250px;
+            transition: all 0.3s;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: none;
+            border-radius: 0.5rem;
+        }
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+            font-weight: 500;
+        }
+        .nav-link {
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8) !important;
+            border-radius: 0.25rem;
+            margin-bottom: 0.2rem;
+        }
+        .nav-link:hover {
+            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-link.active {
+            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .nav-link i {
+            margin-right: 10px;
+        }
+        .room-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+        .room-gallery {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .room-gallery img {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        .placeholder-image {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e9ecef;
+            border-radius: 0.5rem;
+        }
+        .room-type {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .type-apartment {
+            background-color: #6610f2;
+            color: white;
+        }
+        .type-private {
+            background-color: #20c997;
+            color: white;
+        }
+        .type-shared {
+            background-color: #0dcaf0;
+            color: white;
+        }
+        .type-house {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .type-hotel {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .type-studio {
+            background-color: #d63384;
+            color: white;
+        }
+        .availability-badge {
+            width: 10px;
+            height: 10px;
+            display: inline-block;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .available {
+            background-color: #198754;
+        }
+        .unavailable {
+            background-color: #dc3545;
+        }
+        .booking-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .status-confirmed {
+            background-color: #198754;
+            color: white;
+        }
+        .status-cancelled {
+            background-color: #dc3545;
+            color: white;
+        }
+        .status-completed {
+            background-color: #0d6efd;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            .content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                margin-left: 0;
+            }
+            .content.active {
+                margin-left: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-content">
+                <div class="d-flex justify-content-center mb-4">
+                    <h3 class="fs-4 text-white">ESE-Rent</h3>
+                </div>
+                <hr class="text-white">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" th:href="@{/admin/dashboard}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" th:href="@{/admin/users}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" th:href="@{/admin/rooms}">
+                            <i class="bi bi-house-door"></i> Rooms
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" th:href="@{/admin/bookings}">
+                            <i class="bi bi-calendar-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" th:href="@{/admin/payments}">
+                            <i class="bi bi-credit-card"></i> Payments
+                        </a>
+                    </li>
+                    <li class="nav-item mt-5">
+                        <a class="nav-link" href="#" th:href="@{/logout}">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <div class="content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+                <div>
+                    <h3>Room Details</h3>
+                    <p class="text-muted m-0" th:text="${room.title}">Luxury Apartment</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/admin/rooms}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Rooms
+                    </a>
+                    <div class="d-flex gap-1">
+                        <form th:action="@{'/admin/rooms/delete/' + ${room.id}}" method="post" class="d-inline" 
+                            onsubmit="return confirm('Are you sure you want to delete this room?');">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i> Delete Room
+                            </button>
+                        </form>
+                        <form th:action="@{'/admin/rooms/' + ${room.id} + '/toggle-availability'}" method="post" class="d-inline">
+                            <button type="submit" class="btn" th:classappend="${room.available ? 'btn-warning' : 'btn-success'}">
+                                <i class="bi" th:classappend="${room.available ? 'bi-toggle-off' : 'bi-toggle-on'}" th:text="${' ' + (room.available ? 'Mark Unavailable' : 'Mark Available')}"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${successMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${errorMessage}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="row">
+                <!-- Room Details -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Room Images -->
+                            <div th:if="${!#lists.isEmpty(room.imageUrls)}" class="mb-4">
+                                <img th:src="${room.imageUrls[0]}" alt="Room Image" class="room-image mb-2" id="mainImage">
+                                <div class="room-gallery" th:if="${#lists.size(room.imageUrls) > 1}">
+                                    <img th:each="img, imgStat : ${room.imageUrls}" 
+                                         th:src="${img}" 
+                                         th:alt="'Room Image ' + ${imgStat.count}"
+                                         onclick="document.getElementById('mainImage').src=this.src">
+                                </div>
+                            </div>
+                            <div th:if="${#lists.isEmpty(room.imageUrls)}" class="placeholder-image mb-4">
+                                <i class="bi bi-house" style="font-size: 4rem;"></i>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 th:text="${room.title}">Luxury Apartment</h2>
+                                <div>
+                                    <span class="badge room-type" 
+                                        th:classappend="${
+                                            room.roomType.name() == 'APARTMENT' ? 'type-apartment' : 
+                                            room.roomType.name() == 'PRIVATE_ROOM' ? 'type-private' : 
+                                            room.roomType.name() == 'SHARED_ROOM' ? 'type-shared' : 
+                                            room.roomType.name() == 'HOUSE' ? 'type-house' : 
+                                            room.roomType.name() == 'HOTEL' ? 'type-hotel' : 
+                                            'type-studio'}" 
+                                        th:text="${#strings.replace(room.roomType.name(), '_', ' ')}">
+                                        APARTMENT
+                                    </span>
+                                    <div class="ms-2 d-inline-block">
+                                        <span class="availability-badge" th:classappend="${room.available ? 'available' : 'unavailable'}"></span>
+                                        <span th:text="${room.available ? 'Available' : 'Unavailable'}">Available</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="mb-4" th:text="${room.description}">Room description here...</p>
+
+                            <div class="row gy-3">
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Location</h5>
+                                            <p class="card-text" th:text="${room.address}">123 Main St, City, Country</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Room Details</h5>
+                                            <ul class="list-unstyled">
+                                                <li><strong>Price:</strong> <span th:text="${'$' + room.pricePerNight + '/night'}">$100/night</span></li>
+                                                <li><strong>Size:</strong> <span th:text="${room.size + ' m²'}">50 m²</span></li>
+                                                <li><strong>Capacity:</strong> <span th:text="${room.capacity + ' ' + (room.capacity > 1 ? 'people' : 'person')}">4 people</span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Amenities</h5>
+                                            <div th:if="${room.amenities != null && !room.amenities.isEmpty()}">
+                                                <ul class="list-inline">
+                                                    <li class="list-inline-item badge bg-light text-dark me-2 mb-2" 
+                                                        th:each="amenity : ${#strings.arraySplit(room.amenities, ',')}">
+                                                        <span th:text="${amenity.trim()}">Amenity</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <p class="text-muted" th:if="${room.amenities == null || room.amenities.isEmpty()}">No amenities listed</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Landlord and Booking Info -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Landlord Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar me-3 bg-light rounded-circle text-center" style="width: 50px; height: 50px; line-height: 50px;">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0" th:text="${room.landlord.fullName}">John Doe</h6>
+                                    <a th:href="@{'/admin/users/edit/' + ${room.landlord.id}}" class="text-decoration-none">
+                                        View Profile
+                                    </a>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="mb-1"><i class="bi bi-envelope me-1"></i> <span th:text="${room.landlord.email}">john@example.com</span></p>
+                                <p class="mb-0" th:if="${room.landlord.phoneNumber}">
+                                    <i class="bi bi-telephone me-1"></i> <span th:text="${room.landlord.phoneNumber}">+1234567890</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bookings Card -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Bookings</h5>
+                            <span class="badge bg-secondary" th:text="${bookings.size() + ' bookings'}">0 bookings</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item" th:each="booking : ${bookings}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-1 fw-bold" th:text="${booking.user.fullName}">Guest Name</p>
+                                            <p class="mb-1 small">
+                                                <i class="bi bi-calendar-range me-1"></i>
+                                                <span th:text="${#temporals.format(booking.checkInDate, 'MMM dd, yyyy')}">Jan 1, 2023</span> - 
+                                                <span th:text="${#temporals.format(booking.checkOutDate, 'MMM dd, yyyy')}">Jan 5, 2023</span>
+                                            </p>
+                                            <p class="mb-0 small text-muted">
+                                                <span th:text="${booking.numberOfGuests + ' ' + (booking.numberOfGuests > 1 ? 'guests' : 'guest')}">2 guests</span>
+                                            </p>
+                                        </div>
+                                        <span class="badge booking-status" 
+                                            th:classappend="${
+                                                booking.status.name() == 'PENDING' ? 'status-pending' : 
+                                                booking.status.name() == 'CONFIRMED' ? 'status-confirmed' : 
+                                                booking.status.name() == 'CANCELLED' ? 'status-cancelled' : 
+                                                'status-completed'}" 
+                                            th:text="${booking.status}">
+                                            PENDING
+                                        </span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <a th:href="@{'/admin/bookings/' + ${booking.id}}" class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </li>
+                                <li class="list-group-item text-center py-3" th:if="${#lists.isEmpty(bookings)}">
+                                    <p class="text-muted mb-0">No bookings for this room</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

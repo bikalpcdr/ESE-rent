@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.springframework.org/security/tags">
+<head>
+    <title>Browse Rooms - ESE-Rent</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .search-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .card.hover-effect {
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+        .card.hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+            border-color: #ddd;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 6px 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">ESE-Rent</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/rooms">Rooms</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Contact</a>
+                    </li>
+                </ul>
+                <!-- Show login/register buttons for non-authenticated users -->
+                <div class="d-flex" sec:authorize="!isAuthenticated()">
+                    <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                    <a href="/register" class="btn btn-primary">Register</a>
+                </div>
+                <!-- Show user menu for authenticated users -->
+                <div class="dropdown" sec:authorize="isAuthenticated()">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span sec:authentication="name">Username</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <h1 class="mb-4">Available Rooms</h1>
+        
+        <!-- Search Panel -->
+        <div class="search-panel">
+            <form action="/rooms" method="get">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="title" class="form-label">Room Name</label>
+                        <input type="text" class="form-control" id="title" name="title" th:value="${title}" placeholder="Search by name...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="roomType" class="form-label">Room Type</label>
+                        <select class="form-select" id="roomType" name="roomType">
+                            <option value="">All Types</option>
+                            <option th:each="type : ${roomTypes}" 
+                                    th:value="${type}" 
+                                    th:text="${#strings.replace(type.name(), '_', ' ')}"
+                                    th:selected="${type == roomType}">Room Type</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="minPrice" class="form-label">Min Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="minPrice" name="minPrice" th:value="${minPrice}" placeholder="Min">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="maxPrice" class="form-label">Max Price</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="maxPrice" name="maxPrice" th:value="${maxPrice}" placeholder="Max">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="capacity" class="form-label">Capacity</label>
+                        <input type="number" class="form-control" id="capacity" name="capacity" min="1" th:value="${capacity}" placeholder="People">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Search results information -->
+        <div class="mb-4" th:if="${searchPerformed}">
+            <div class="alert alert-info">
+                <p class="mb-0">
+                    <span th:if="${not #lists.isEmpty(rooms)}">Found <strong th:text="${#lists.size(rooms)}">0</strong> rooms matching your search criteria.</span>
+                    <span th:if="${#lists.isEmpty(rooms)}">No rooms found matching your search criteria. Try different filters.</span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Rooms Grid -->
+        <div class="row g-4">
+            <div class="col-md-4 mb-4" th:each="room : ${rooms}">
+                <div class="card h-100 shadow-sm hover-effect">
+                    <div class="position-relative">
+                        <div th:if="${!#lists.isEmpty(room.imageUrls)}" class="bg-image">
+                            <img th:src="${room.imageUrls[0]}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Room Image">
+                        </div>
+                        <div th:if="${#lists.isEmpty(room.imageUrls)}" class="card-img-top bg-light d-flex justify-content-center align-items-center" style="height: 200px;">
+                            <i class="bi bi-house-door text-secondary" style="font-size: 4rem;"></i>
+                        </div>
+                        <span th:if="${room.available}" class="position-absolute top-0 end-0 badge bg-success m-2">Available</span>
+                        <span th:unless="${room.available}" class="position-absolute top-0 end-0 badge bg-danger m-2">Unavailable</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0" th:text="${room.title}">Luxury Apartment</h5>
+                            <span class="badge bg-primary" th:text="${#strings.replace(room.roomType.name(), '_', ' ')}">APARTMENT</span>
+                        </div>
+                        <p class="card-text text-primary fw-bold" th:text="${'$' + room.pricePerNight + ' / night'}">$100 / night</p>
+                        <p class="card-text mb-3 text-truncate">
+                            <i class="bi bi-geo-alt-fill text-secondary me-1"></i>
+                            <span th:text="${room.address}">123 Main St, City</span>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-people me-1"></i>
+                                <span th:text="${room.capacity + ' ' + (room.capacity > 1 ? 'people' : 'person')}">4 people</span>
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-rulers me-1"></i>
+                                <span th:text="${room.size + ' m²'}">50 m²</span>
+                            </small>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <!-- If user is authenticated, show View Details button -->
+                            <a sec:authorize="isAuthenticated()" th:href="@{'/rooms/' + ${room.id}}" class="btn btn-outline-primary w-100">View Details</a>
+                            
+                            <!-- If user is not authenticated, show Login button -->
+                            <div sec:authorize="!isAuthenticated()" class="d-grid gap-2">
+                                <a href="/login" class="btn btn-outline-primary">Login to View</a>
+                                <small class="text-center text-muted">You must be logged in to view room details</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Show message if no rooms are available -->
+            <div class="col-12" th:if="${#lists.isEmpty(rooms)}">
+                <div class="alert alert-info">
+                    <p class="text-center mb-0">No rooms available at the moment. Check back soon!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>ESE-Rent</h5>
+                    <p class="text-muted">Finding perfect accommodation made easy.</p>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h5>Company</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">About</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Careers</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">News</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h5>Support</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Help Center</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">Contact Us</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link text-muted p-0 mb-2">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Subscribe to our newsletter</h5>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="Email address">
+                        <button class="btn btn-primary" type="button">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <p class="text-muted">© 2025 ESE-Rent. All rights reserved.</p>
+                <ul class="list-unstyled d-flex">
+                    <li class="ms-3"><a href="#" class="text-muted"><i class="bi bi-facebook"></i></a></li>
+                    <li class="ms-3"><a href="#" class="text-muted"><i class="bi bi-twitter"></i></a></li>
+                    <li class="ms-3"><a href="#" class="text-muted"><i class="bi bi-instagram"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -2,10 +2,8 @@ package com.eserent.service;
 
 import com.eserent.entity.Booking;
 import com.eserent.entity.Room;
-import com.eserent.entity.RoomImage;
 import com.eserent.entity.User;
 import com.eserent.repository.BookingRepository;
-import com.eserent.repository.RoomImageRepository;
 import com.eserent.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +25,6 @@ public class RoomService {
     private final RoomRepository roomRepository;
 
     private final BookingRepository bookingRepository;
-
-    private final RoomImageRepository roomImageRepository;
 
     public List<Room> getAllRooms() {
         return roomRepository.findAll();
@@ -86,32 +82,35 @@ public class RoomService {
         return room.getPricePerNight().multiply(BigDecimal.valueOf(nights));
     }
 
-    public Optional<RoomImage> getImageById(Long id) {
-        return roomImageRepository.findById(id);
-    }
-
-    public RoomImage saveImage(RoomImage image) {
-        return roomImageRepository.save(image);
-    }
-
-    public void deleteImage(Long id) {
-        roomImageRepository.deleteById(id);
-    }
-
-    // Add this method to RoomService
-    public void deleteRoomImage(Long roomId, Long imageId) {
-        Optional<Room> roomOpt = getRoomById(roomId);
-        if (roomOpt.isPresent()) {
-            Room room = roomOpt.get();
-
-            // Find and remove the image from the room's collection
-            room.getImages().removeIf(image -> image.getId().equals(imageId));
-
-            // Update the room to persist the changes
-            updateRoom(room);
-
-            // Delete the image from the repository
-            roomImageRepository.deleteById(imageId);
+    /**
+     * Get featured rooms for the home page
+     * This selects rooms based on criteria like being available, having images, 
+     * and having complete information
+     * @param limit Maximum number of rooms to return
+     * @return List of featured rooms
+     */
+    public List<Room> getFeaturedRooms(int limit) {
+        // Get all available rooms
+        List<Room> availableRooms = getAvailableRooms();
+        
+        // Filter rooms with images and good descriptions (quality criteria)
+        List<Room> featuredRooms = availableRooms.stream()
+            .filter(room -> !room.getImageUrls().isEmpty())                // Must have images
+            .filter(room -> room.getDescription() != null 
+                         && room.getDescription().length() > 20)           // Must have decent description
+            .filter(room -> room.getAmenities() != null 
+                         && !room.getAmenities().isEmpty())                // Must have amenities listed
+            .sorted((r1, r2) -> r2.getId().compareTo(r1.getId()))         // Sort by newest first (higher ID)
+            .limit(limit)
+            .toList();
+        
+        // If we don't have enough rooms after filtering, just return available rooms
+        if (featuredRooms.size() < limit) {
+            return availableRooms.stream()
+                    .limit(limit)
+                    .toList();
         }
+        
+        return featuredRooms;
     }
 }
